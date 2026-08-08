@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Lumina Social
 
-## Getting Started
+Plataforma de experiencias interactivas para bodas y eventos sociales.
 
-First, run the development server:
+## Stack
+
+- Next.js 15 (App Router) + TypeScript + Tailwind CSS
+- Supabase (`@supabase/supabase-js`, `@supabase/ssr`)
+- Framer Motion · Lucide · Socket.IO (deps listas)
+
+## Arranque
 
 ```bash
+# .env.local ya debe tener URL + anon/publishable key
+cp .env.local.example .env.local   # solo si partes de cero
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Ejecuta una vez [`supabase/schema.sql`](supabase/schema.sql) en el SQL Editor de Supabase (tablas, Storage `event-photos`, RLS, Realtime).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Evento activo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Paparazzi y Moderador resuelven el evento así:
 
-## Learn More
+1. `?eventId=<uuid>` o `?code=BODA-XXX`
+2. Si no hay params → `NEXT_PUBLIC_DEMO_EVENT_ID`
+3. Si falla → get/create evento `code: DEMO`
 
-To learn more about Next.js, take a look at the following resources:
+Ejemplos: `/paparazzi?code=DEMO` · `/moderator?code=DEMO`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Tras el schema base, ejecuta también:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. [`supabase/realtime_gamification.sql`](supabase/realtime_gamification.sql) — Realtime de votos  
+2. [`supabase/seed.sql`](supabase/seed.sql) — evento DEMO + 10 trivias  
 
-## Deploy on Vercel
+### Cómo aplicar el seed en Supabase Cloud
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Abre tu proyecto en [https://supabase.com/dashboard](https://supabase.com/dashboard)  
+2. Menú izquierdo → **SQL Editor** → **New query**  
+3. Abre el archivo `supabase/seed.sql` del repo, copia **todo** el contenido y pégalo en el editor  
+4. Pulsa **Run** (o Ctrl/Cmd + Enter)  
+5. Verifica en **Table Editor**:  
+   - `events` → fila `DEMO` / `Gala de Prueba Lumina`  
+   - `live_screen_state` → `IDLE`  
+   - `trivia_questions` → 10 filas del evento demo  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Prueba local: `/paparazzi?code=DEMO`, `/moderator?code=DEMO`, `/screen?code=DEMO`  
+Opcional en `.env.local`: `NEXT_PUBLIC_DEMO_EVENT_ID=00000000-0000-0000-0000-000000000001`
+
+## Rutas base
+
+| Ruta | Descripción |
+|------|-------------|
+| `/` | Landing |
+| `/paparazzi` | Captura móvil Paparazzi |
+| `/moderator` | Moderación + Trivia + Pose Battle |
+| `/guest` | Invitado + EN VIVO + votaciones |
+| `/screen` | Pantalla gigante (TV) |
+| `/magazine/[eventId]` | Revista digital post-evento |
+| `/login` | Auth (placeholder) |
+| `/api/health` | Health check |
+
+## Estructura
+
+```
+app/(main)/{paparazzi,guest}
+app/(dashboard)/moderator
+app/(screen)/screen
+components/{paparazzi,moderator,screen,guest}
+hooks/{useEventContext,usePhotosRealtime,useModerationKeys,useLiveScreenSync}
+lib/events/resolve-event.ts
+lib/images/compress-image.ts
+lib/supabase/queries.ts
+```
