@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS events (
   archived_at TIMESTAMPTZ,
   album_token TEXT,
   album_expires_at TIMESTAMPTZ,
-  deleted_at TIMESTAMPTZ
+  deleted_at TIMESTAMPTZ,
+  table_count INTEGER NOT NULL DEFAULT 30 CHECK (table_count >= 1 AND table_count <= 100)
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_code ON events (code);

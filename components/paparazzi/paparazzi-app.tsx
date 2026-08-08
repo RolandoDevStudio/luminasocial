@@ -128,7 +128,12 @@ export function PaparazziApp() {
       </motion.header>
 
       <motion.div variants={fadeUp} className="space-y-6">
-        <TableSelector value={table} onChange={setTable} disabled={sending} />
+        <TableSelector
+          value={table}
+          onChange={setTable}
+          disabled={sending}
+          tableCount={event.table_count ?? 30}
+        />
 
         <CameraCapture
           previewUrl={previewUrl}

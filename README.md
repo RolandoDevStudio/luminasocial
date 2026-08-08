@@ -34,6 +34,7 @@ Tras el schema base, ejecuta también:
 1. [`supabase/realtime_gamification.sql`](supabase/realtime_gamification.sql) — Realtime de votos  
 2. [`supabase/seed.sql`](supabase/seed.sql) — evento DEMO + 10 trivias  
 3. [`supabase/archive_albums.sql`](supabase/archive_albums.sql) — columnas de álbum archivado (token, caducidad, soft-delete)  
+4. [`supabase/table_count.sql`](supabase/table_count.sql) — número de mesas por evento (QR)  
 
 Para «Borrar todo» en admin hace falta `SUPABASE_SERVICE_ROLE_KEY` en `.env.local`.
 

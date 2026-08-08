@@ -11,6 +11,7 @@ import {
   ExternalLink,
   LogOut,
   Plus,
+  QrCode,
   Trash2,
   X,
 } from "lucide-react";
@@ -25,6 +26,7 @@ import {
 } from "@/app/(dashboard)/admin/actions";
 import type { Event } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { TableQrPanel } from "@/components/admin/table-qr-panel";
 
 type AdminDashboardProps = {
   email: string;
@@ -43,6 +45,7 @@ export function AdminDashboard({
   const [pending, startTransition] = useTransition();
   const [archiveTarget, setArchiveTarget] = useState<Event | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Event | null>(null);
+  const [qrTarget, setQrTarget] = useState<Event | null>(null);
   const [lastAlbumPath, setLastAlbumPath] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -140,7 +143,7 @@ export function AdminDashboard({
             <h2 className="font-display text-xl text-[#f8f0e3]">Nuevo evento</h2>
           </div>
           <form
-            className="mt-4 grid gap-3 md:grid-cols-[1.4fr_1fr_auto_auto]"
+            className="mt-4 grid gap-3 md:grid-cols-[1.3fr_0.9fr_0.7fr_auto_auto]"
             action={(formData) => {
               startTransition(async () => {
                 const res = await createEventAction(formData);
@@ -163,6 +166,15 @@ export function AdminDashboard({
               required
               placeholder="CÓDIGO"
               className="border border-[#D4AF37]/20 bg-[#0c0b0a] px-3 py-3 text-sm uppercase outline-none focus:border-[#D4AF37]"
+            />
+            <input
+              name="table_count"
+              type="number"
+              min={1}
+              max={100}
+              defaultValue={30}
+              title="Número de mesas"
+              className="border border-[#D4AF37]/20 bg-[#0c0b0a] px-3 py-3 text-sm outline-none focus:border-[#D4AF37]"
             />
             <label className="flex items-center gap-2 text-sm text-[#f4ead7]/60">
               <input name="is_active" type="checkbox" defaultChecked />
@@ -200,6 +212,7 @@ export function AdminDashboard({
                     onRefresh={() => router.refresh()}
                     onArchive={() => setArchiveTarget(event)}
                     onDelete={() => setDeleteTarget(event)}
+                    onOpenQr={() => setQrTarget(event)}
                     onCopyAlbum={
                       event.album_token
                         ? () => void copyAlbum(`/magazine/${event.album_token}`)
@@ -338,6 +351,10 @@ export function AdminDashboard({
           }}
         />
       ) : null}
+
+      {qrTarget ? (
+        <TableQrPanel event={qrTarget} onClose={() => setQrTarget(null)} />
+      ) : null}
     </motion.main>
   );
 }
@@ -349,6 +366,7 @@ function EventCard({
   onRefresh,
   onArchive,
   onDelete,
+  onOpenQr,
   onCopyAlbum,
   startTransition,
 }: {
@@ -358,6 +376,7 @@ function EventCard({
   onRefresh: () => void;
   onArchive: () => void;
   onDelete: () => void;
+  onOpenQr: () => void;
   onCopyAlbum?: () => void;
   startTransition: (cb: () => void) => void;
 }) {
@@ -426,7 +445,7 @@ function EventCard({
       </div>
 
       <form
-        className="mt-4 grid gap-2 md:grid-cols-[1.4fr_1fr_auto]"
+        className="mt-4 grid gap-2 md:grid-cols-[1.3fr_0.9fr_0.7fr_auto]"
         action={(formData) => {
           startTransition(async () => {
             const res = await updateEventAction(formData);
@@ -445,6 +464,15 @@ function EventCard({
           name="code"
           defaultValue={event.code}
           className="border border-[#D4AF37]/20 bg-[#0c0b0a] px-3 py-2 text-sm uppercase outline-none focus:border-[#D4AF37]"
+        />
+        <input
+          name="table_count"
+          type="number"
+          min={1}
+          max={100}
+          defaultValue={event.table_count ?? 30}
+          title="Número de mesas"
+          className="border border-[#D4AF37]/20 bg-[#0c0b0a] px-3 py-2 text-sm outline-none focus:border-[#D4AF37]"
         />
         <button
           type="submit"
@@ -486,6 +514,16 @@ function EventCard({
             </button>
           </form>
         ) : null}
+
+        <button
+          type="button"
+          disabled={pending}
+          onClick={onOpenQr}
+          className="inline-flex items-center gap-1.5 border border-[#D4AF37]/40 px-3 py-1.5 text-xs uppercase tracking-wider text-[#D4AF37] disabled:opacity-50"
+        >
+          <QrCode className="h-3.5 w-3.5" />
+          QR mesas ({event.table_count ?? 30})
+        </button>
 
         <button
           type="button"

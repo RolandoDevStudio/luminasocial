@@ -54,7 +54,10 @@ async function getOrCreateDemoEvent(): Promise<Event> {
       name: "Demo Event",
       code: "DEMO",
       is_active: true,
-      album_token: crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8),
+      album_token:
+        crypto.randomUUID().replace(/-/g, "") +
+        crypto.randomUUID().replace(/-/g, "").slice(0, 8),
+      table_count: 30,
     })
     .select("*")
     .single();

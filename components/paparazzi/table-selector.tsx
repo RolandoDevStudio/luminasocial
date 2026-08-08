@@ -2,26 +2,29 @@
 
 import { cn } from "@/lib/utils";
 
-const TABLES = Array.from({ length: 30 }, (_, i) => i + 1);
-
 type TableSelectorProps = {
   value: number | null;
   onChange: (table: number) => void;
   disabled?: boolean;
+  tableCount?: number;
 };
 
 export function TableSelector({
   value,
   onChange,
   disabled,
+  tableCount = 30,
 }: TableSelectorProps) {
+  const count = Math.min(100, Math.max(1, tableCount));
+  const tables = Array.from({ length: count }, (_, i) => i + 1);
+
   return (
     <div>
       <p className="mb-3 text-xs font-medium uppercase tracking-[0.22em] text-[#D4AF37]">
         Mesa
       </p>
-      <div className="grid grid-cols-5 gap-2">
-        {TABLES.map((n) => {
+      <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
+        {tables.map((n) => {
           const active = value === n;
           return (
             <button

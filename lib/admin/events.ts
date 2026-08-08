@@ -41,9 +41,11 @@ export async function createEvent(input: {
   name: string;
   code: string;
   is_active?: boolean;
+  table_count?: number;
 }): Promise<Event> {
   const supabase = await createServerClient();
   const code = input.code.trim().toUpperCase();
+  const tableCount = clampTableCount(input.table_count ?? 30);
 
   const { data, error } = await supabase
     .from("events")
@@ -52,6 +54,7 @@ export async function createEvent(input: {
       code,
       is_active: input.is_active ?? true,
       album_token: generateAlbumToken(),
+      table_count: tableCount,
     })
     .select("*")
     .single();
@@ -75,17 +78,19 @@ export async function createEvent(input: {
 
 export async function updateEvent(
   id: string,
-  input: Partial<Pick<Event, "name" | "code" | "is_active">>,
+  input: Partial<Pick<Event, "name" | "code" | "is_active" | "table_count">>,
 ): Promise<Event> {
   const supabase = await createServerClient();
   const patch: {
     name?: string;
     code?: string;
     is_active?: boolean;
+    table_count?: number;
   } = {};
   if (input.name != null) patch.name = input.name.trim();
   if (input.code != null) patch.code = input.code.trim().toUpperCase();
   if (input.is_active != null) patch.is_active = input.is_active;
+  if (input.table_count != null) patch.table_count = clampTableCount(input.table_count);
 
   const { data, error } = await supabase
     .from("events")
@@ -98,6 +103,11 @@ export async function updateEvent(
     throw new Error(`Failed to update event: ${error.message}`);
   }
   return data;
+}
+
+function clampTableCount(n: number): number {
+  if (!Number.isFinite(n)) return 30;
+  return Math.min(100, Math.max(1, Math.round(n)));
 }
 
 export async function archiveEvent(

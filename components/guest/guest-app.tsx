@@ -14,8 +14,6 @@ import type { PoseBattlePayload, TriviaPayload } from "@/types/database";
 import { cn } from "@/lib/utils";
 import { fadeUp, staggerContainer, tapSoft } from "@/lib/motion";
 
-const TABLES = Array.from({ length: 30 }, (_, i) => i + 1);
-
 function isTriviaPayload(payload: unknown): payload is TriviaPayload {
   return (
     typeof payload === "object" &&
@@ -38,8 +36,11 @@ export function GuestApp() {
   const reduce = useReducedMotion();
   const { event, loading: eventLoading, error: eventError } = useEventContext();
   const live = useLiveScreenSync(event?.id ?? null);
-  const { tableNumber, setTableNumber, ready } = useGuestTable();
+  const tableCount = event?.table_count ?? 30;
+  const { tableNumber, setTableNumber, ready } = useGuestTable(tableCount);
   const [highlightTable, setHighlightTable] = useState(false);
+
+  const tables = Array.from({ length: tableCount }, (_, i) => i + 1);
 
   if (eventLoading || live.loading || !ready) {
     return (
@@ -113,7 +114,7 @@ export function GuestApp() {
           Tu mesa {tableNumber != null ? `· ${tableNumber}` : ""}
         </p>
         <div className="mt-3 grid grid-cols-6 gap-1.5">
-          {TABLES.map((n) => (
+          {tables.map((n) => (
             <motion.button
               key={n}
               type="button"
@@ -147,7 +148,11 @@ export function GuestApp() {
 
       <motion.div variants={fadeUp} className="mt-10 space-y-3">
         <Link
-          href="/paparazzi"
+          href={
+            event.code
+              ? `/paparazzi?code=${encodeURIComponent(event.code)}`
+              : "/paparazzi"
+          }
           className="flex min-h-14 items-center justify-center border border-[#D4AF37] bg-[#D4AF37] text-sm font-semibold uppercase tracking-wider text-[#1a140c]"
         >
           Abrir Paparazzi
@@ -165,7 +170,11 @@ export function GuestApp() {
           </p>
         )}
         <Link
-          href="/screen"
+          href={
+            event.code
+              ? `/screen?code=${encodeURIComponent(event.code)}`
+              : "/screen"
+          }
           className="flex min-h-12 items-center justify-center border border-[#D4AF37]/25 text-sm font-medium text-[#f4ead7]/60"
         >
           Ver pantalla completa

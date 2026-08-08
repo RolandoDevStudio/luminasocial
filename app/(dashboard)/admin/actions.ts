@@ -17,13 +17,19 @@ export async function createEventAction(formData: FormData) {
   const name = String(formData.get("name") ?? "");
   const code = String(formData.get("code") ?? "");
   const isActive = formData.get("is_active") === "on";
+  const tableCount = Number(formData.get("table_count") ?? 30);
 
   if (!name.trim() || !code.trim()) {
     return { error: "Nombre y código son obligatorios" };
   }
 
   try {
-    const event = await createEvent({ name, code, is_active: isActive });
+    const event = await createEvent({
+      name,
+      code,
+      is_active: isActive,
+      table_count: tableCount,
+    });
     revalidatePath("/admin");
     return { ok: true as const, event };
   } catch (err) {
@@ -58,13 +64,22 @@ export async function updateEventAction(formData: FormData) {
   const id = String(formData.get("id") ?? "");
   const name = String(formData.get("name") ?? "");
   const code = String(formData.get("code") ?? "");
+  const tableCountRaw = formData.get("table_count");
+  const tableCount =
+    tableCountRaw != null && String(tableCountRaw).trim() !== ""
+      ? Number(tableCountRaw)
+      : undefined;
 
   if (!id || !name.trim() || !code.trim()) {
     return { error: "Datos incompletos" };
   }
 
   try {
-    await updateEvent(id, { name, code });
+    await updateEvent(id, {
+      name,
+      code,
+      ...(tableCount != null ? { table_count: tableCount } : {}),
+    });
     revalidatePath("/admin");
     return { ok: true as const };
   } catch (err) {

@@ -20,6 +20,7 @@ export type Event = {
   album_token: string | null;
   album_expires_at: string | null;
   deleted_at: string | null;
+  table_count: number;
 };
 
 export type Photo = {
@@ -124,6 +125,7 @@ export type Database = {
           album_token?: string | null;
           album_expires_at?: string | null;
           deleted_at?: string | null;
+          table_count?: number;
         };
         Update: {
           id?: string;
@@ -135,6 +137,7 @@ export type Database = {
           album_token?: string | null;
           album_expires_at?: string | null;
           deleted_at?: string | null;
+          table_count?: number;
         };
         Relationships: [];
       };
