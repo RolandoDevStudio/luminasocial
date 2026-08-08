@@ -6,6 +6,12 @@ export type EventLookupParams = {
   code?: string | null;
 };
 
+function isLiveOperable(event: Event | null): event is Event {
+  if (!event) return false;
+  if (event.deleted_at || event.archived_at) return false;
+  return true;
+}
+
 async function fetchEventById(id: string): Promise<Event | null> {
   const supabase = createClient();
   const { data, error } = await supabase
@@ -18,7 +24,7 @@ async function fetchEventById(id: string): Promise<Event | null> {
     throw new Error(`Failed to load event by id: ${error.message}`);
   }
 
-  return data;
+  return isLiveOperable(data) ? data : null;
 }
 
 async function fetchEventByCode(code: string): Promise<Event | null> {
@@ -33,7 +39,7 @@ async function fetchEventByCode(code: string): Promise<Event | null> {
     throw new Error(`Failed to load event by code: ${error.message}`);
   }
 
-  return data;
+  return isLiveOperable(data) ? data : null;
 }
 
 async function getOrCreateDemoEvent(): Promise<Event> {

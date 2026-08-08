@@ -123,6 +123,12 @@ export function LandingHero() {
             Ver pantalla
           </Link>
           <Link
+            href="/admin/login"
+            className="inline-flex items-center border border-[#D4AF37]/40 px-6 py-3.5 text-sm font-medium tracking-wide text-[#D4AF37] transition hover:border-[#D4AF37] hover:text-[#f4ead7]"
+          >
+            Admin
+          </Link>
+          <Link
             href="/guest"
             className="inline-flex items-center border border-[#c4a574]/40 px-6 py-3.5 text-sm font-medium tracking-wide text-[#c4a574] transition hover:border-[#c4a574] hover:text-[#f4ead7]"
           >

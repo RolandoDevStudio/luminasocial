@@ -5,7 +5,6 @@ import { Loader2 } from "lucide-react";
 import {
   getApprovedPhotos,
   getClosestPoseBattle,
-  getEventById,
   getMostPhotogenicTable,
   getTriviaTableLeaders,
   type TableScore,
@@ -15,13 +14,14 @@ import { MagazineCover } from "@/components/magazine/cover";
 import { MasonryGallery } from "@/components/magazine/masonry-gallery";
 import { ShareBar } from "@/components/magazine/share-bar";
 import { StatsSection } from "@/components/magazine/stats-section";
+import { AlbumExpiryBanner } from "@/components/magazine/album-expiry-banner";
 
 type MagazineAppProps = {
-  eventId: string;
+  event: Event;
+  isAlbum: boolean;
 };
 
-export function MagazineApp({ eventId }: MagazineAppProps) {
-  const [event, setEvent] = useState<Event | null>(null);
+export function MagazineApp({ event, isAlbum }: MagazineAppProps) {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photogenic, setPhotogenic] = useState<TableScore | null>(null);
   const [triviaLeaders, setTriviaLeaders] = useState<TableScore[]>([]);
@@ -37,26 +37,20 @@ export function MagazineApp({ eventId }: MagazineAppProps) {
       setLoading(true);
       setError(null);
       try {
-        const [ev, approved, photoTable, leaders, battle] = await Promise.all([
-          getEventById(eventId),
-          getApprovedPhotos(eventId),
-          getMostPhotogenicTable(eventId),
-          getTriviaTableLeaders(eventId),
-          getClosestPoseBattle(eventId),
+        const [approved, photoTable, leaders, battle] = await Promise.all([
+          getApprovedPhotos(event.id),
+          getMostPhotogenicTable(event.id),
+          getTriviaTableLeaders(event.id),
+          getClosestPoseBattle(event.id),
         ]);
         if (cancelled) return;
-        if (!ev) {
-          setError("Evento no encontrado");
-          return;
-        }
-        setEvent(ev);
         setPhotos(approved);
         setPhotogenic(photoTable);
         setTriviaLeaders(leaders);
         setClosestBattle(battle);
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Error cargando revista");
+          setError(err instanceof Error ? err.message : "Error cargando álbum");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -66,7 +60,7 @@ export function MagazineApp({ eventId }: MagazineAppProps) {
     return () => {
       cancelled = true;
     };
-  }, [eventId]);
+  }, [event.id]);
 
   if (loading) {
     return (
@@ -76,21 +70,33 @@ export function MagazineApp({ eventId }: MagazineAppProps) {
     );
   }
 
-  if (error || !event) {
+  if (error) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-[#080706] px-6 text-center text-red-200">
-        <p>{error ?? "Revista no disponible"}</p>
+        <p>{error}</p>
       </main>
     );
   }
 
   return (
     <main className="magazine-root min-h-dvh bg-[#080706] text-[#f4ead7] print:bg-white print:text-black">
-      <ShareBar eventName={event.name} />
+      {isAlbum && event.album_expires_at ? (
+        <AlbumExpiryBanner expiresAt={event.album_expires_at} />
+      ) : null}
+      <ShareBar
+        eventName={event.name}
+        showDownload={isAlbum}
+        event={event}
+        photos={photos}
+        photogenic={photogenic}
+        triviaLeaders={triviaLeaders}
+        closestBattle={closestBattle}
+      />
       <MagazineCover
         eventName={event.name}
         code={event.code}
         photoCount={photos.length}
+        isAlbum={isAlbum}
       />
       <StatsSection
         photogenic={photogenic}

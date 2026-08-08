@@ -28,11 +28,19 @@ CREATE TABLE IF NOT EXISTS events (
   name TEXT NOT NULL,
   code TEXT NOT NULL UNIQUE,
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  archived_at TIMESTAMPTZ,
+  album_token TEXT,
+  album_expires_at TIMESTAMPTZ,
+  deleted_at TIMESTAMPTZ
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_code ON events (code);
 CREATE INDEX IF NOT EXISTS idx_events_is_active ON events (is_active);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_events_album_token
+  ON events (album_token)
+  WHERE album_token IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_deleted_at ON events (deleted_at);
 
 -- -----------------------------------------------------------------------------
 -- 2. photos

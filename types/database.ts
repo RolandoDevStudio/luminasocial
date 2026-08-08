@@ -16,6 +16,10 @@ export type Event = {
   code: string;
   is_active: boolean;
   created_at: string;
+  archived_at: string | null;
+  album_token: string | null;
+  album_expires_at: string | null;
+  deleted_at: string | null;
 };
 
 export type Photo = {
@@ -116,6 +120,10 @@ export type Database = {
           code: string;
           is_active?: boolean;
           created_at?: string;
+          archived_at?: string | null;
+          album_token?: string | null;
+          album_expires_at?: string | null;
+          deleted_at?: string | null;
         };
         Update: {
           id?: string;
@@ -123,6 +131,10 @@ export type Database = {
           code?: string;
           is_active?: boolean;
           created_at?: string;
+          archived_at?: string | null;
+          album_token?: string | null;
+          album_expires_at?: string | null;
+          deleted_at?: string | null;
         };
         Relationships: [];
       };

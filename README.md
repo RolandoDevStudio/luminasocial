@@ -33,6 +33,9 @@ Tras el schema base, ejecuta también:
 
 1. [`supabase/realtime_gamification.sql`](supabase/realtime_gamification.sql) — Realtime de votos  
 2. [`supabase/seed.sql`](supabase/seed.sql) — evento DEMO + 10 trivias  
+3. [`supabase/archive_albums.sql`](supabase/archive_albums.sql) — columnas de álbum archivado (token, caducidad, soft-delete)  
+
+Para «Borrar todo» en admin hace falta `SUPABASE_SERVICE_ROLE_KEY` en `.env.local`.
 
 ### Cómo aplicar el seed en Supabase Cloud
 
@@ -46,6 +49,7 @@ Tras el schema base, ejecuta también:
    - `trivia_questions` → 10 filas del evento demo  
 
 Prueba local: `/paparazzi?code=DEMO`, `/moderator?code=DEMO`, `/screen?code=DEMO`  
+Admin: `/admin/login` con `ADMIN_EMAIL` / `ADMIN_PASSWORD` de `.env.local`  
 Opcional en `.env.local`: `NEXT_PUBLIC_DEMO_EVENT_ID=00000000-0000-0000-0000-000000000001`
 
 ## Rutas base
@@ -53,12 +57,14 @@ Opcional en `.env.local`: `NEXT_PUBLIC_DEMO_EVENT_ID=00000000-0000-0000-0000-000
 | Ruta | Descripción |
 |------|-------------|
 | `/` | Landing |
+| `/admin/login` | Login administrador (`.env`) |
+| `/admin` | Centro de control · CRUD, archivar álbum, eliminar |
 | `/paparazzi` | Captura móvil Paparazzi |
 | `/moderator` | Moderación + Trivia + Pose Battle |
 | `/guest` | Invitado + EN VIVO + votaciones |
 | `/screen` | Pantalla gigante (TV) |
-| `/magazine/[eventId]` | Revista digital post-evento |
-| `/login` | Auth (placeholder) |
+| `/magazine/[slug]` | Revista / álbum (UUID en vivo o token archivado) |
+| `/login` | Auth placeholder genérico |
 | `/api/health` | Health check |
 
 ## Estructura
