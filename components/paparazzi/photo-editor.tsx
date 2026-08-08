@@ -163,7 +163,7 @@ export function PhotoEditor({
     const c = dragOrigin.current.crop;
 
     setEdits((prev) => {
-      let next: CropRect = { ...c };
+      const next: CropRect = { ...c };
       if (drag === "move") {
         next.x = Math.min(1 - c.w, Math.max(0, c.x + dx));
         next.y = Math.min(1 - c.h, Math.max(0, c.y + dy));
