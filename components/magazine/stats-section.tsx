@@ -1,7 +1,9 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import type { TableScore } from "@/lib/supabase/gamification";
 import type { PoseBattle } from "@/types/database";
+import { fadeUp, staggerContainer } from "@/lib/motion";
 
 type StatsSectionProps = {
   photogenic: TableScore | null;
@@ -14,18 +16,30 @@ export function StatsSection({
   triviaLeaders,
   closestBattle,
 }: StatsSectionProps) {
+  const reduce = useReducedMotion();
+
   return (
     <section className="border-y border-[#D4AF37]/20 px-6 py-12 print:border-neutral-300">
-      <h2 className="font-display text-3xl text-[#f8f0e3] print:text-black">
+      <motion.h2
+        initial={reduce ? false : "hidden"}
+        whileInView="show"
+        viewport={{ once: true, margin: "-40px" }}
+        variants={fadeUp}
+        className="font-display text-3xl text-[#f8f0e3] print:text-black"
+      >
         Estadísticas de la gala
-      </h2>
-      <div className="mt-8 grid gap-6 md:grid-cols-3">
+      </motion.h2>
+      <motion.div
+        initial={reduce ? false : "hidden"}
+        whileInView="show"
+        viewport={{ once: true, margin: "-40px" }}
+        variants={staggerContainer}
+        className="mt-8 grid gap-6 md:grid-cols-3"
+      >
         <StatCard
           label="Mesa más fotogénica"
           value={
-            photogenic
-              ? `Mesa ${photogenic.table_number}`
-              : "Sin datos"
+            photogenic ? `Mesa ${photogenic.table_number}` : "Sin datos"
           }
           detail={
             photogenic ? `${photogenic.score} fotos aprobadas` : undefined
@@ -57,7 +71,7 @@ export function StatsSection({
               : undefined
           }
         />
-      </div>
+      </motion.div>
     </section>
   );
 }
@@ -72,7 +86,10 @@ function StatCard({
   detail?: string;
 }) {
   return (
-    <article className="border border-[#D4AF37]/15 bg-[#12100e] p-5 print:border-neutral-300 print:bg-white">
+    <motion.article
+      variants={fadeUp}
+      className="border border-[#D4AF37]/15 bg-[#12100e] p-5 print:border-neutral-300 print:bg-white"
+    >
       <p className="text-[10px] uppercase tracking-[0.2em] text-[#D4AF37] print:text-neutral-600">
         {label}
       </p>
@@ -84,6 +101,6 @@ function StatCard({
           {detail}
         </p>
       ) : null}
-    </article>
+    </motion.article>
   );
 }

@@ -2,7 +2,9 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEventContext } from "@/hooks/useEventContext";
+import { fadeUp, staggerContainer } from "@/lib/motion";
 import { useModerationKeys } from "@/hooks/useModerationKeys";
 import { usePhotosRealtime } from "@/hooks/usePhotosRealtime";
 import { playApproveSound, playRejectSound } from "@/lib/audio/moderation-sounds";
@@ -20,6 +22,7 @@ import { TableFilter } from "@/components/moderator/table-filter";
 import { TriviaControl } from "@/components/moderator/trivia-control";
 
 export function ModeratorConsole() {
+  const reduce = useReducedMotion();
   const { event, loading: eventLoading, error: eventError } = useEventContext();
   const {
     photos,
@@ -128,9 +131,17 @@ export function ModeratorConsole() {
   }
 
   return (
-    <main className="min-h-dvh bg-[#080706] text-[#f4ead7]">
+    <motion.main
+      initial={reduce ? false : "hidden"}
+      animate="show"
+      variants={staggerContainer}
+      className="min-h-dvh bg-[#080706] text-[#f4ead7]"
+    >
       <div className="mx-auto max-w-7xl px-6 py-8">
-        <header className="mb-8 flex flex-wrap items-end justify-between gap-4">
+        <motion.header
+          variants={fadeUp}
+          className="mb-8 flex flex-wrap items-end justify-between gap-4"
+        >
           <div>
             <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-[#D4AF37]">
               One-Click Moderation
@@ -149,9 +160,9 @@ export function ModeratorConsole() {
             onApprove={() => focused && onApprove(focused)}
             onReject={() => focused && onReject(focused)}
           />
-        </header>
+        </motion.header>
 
-        <div className="mb-6 space-y-4">
+        <motion.div variants={fadeUp} className="mb-6 space-y-4">
           <StatsBar stats={stats} />
           <div className="flex flex-wrap items-center justify-between gap-3">
             <TableFilter
@@ -167,24 +178,26 @@ export function ModeratorConsole() {
               </p>
             )}
           </div>
-        </div>
+        </motion.div>
 
-        <PhotoQueue
-          photos={pendingQueue}
-          focusedId={focused?.id ?? null}
-          busyId={busyId}
-          onSelectApprove={onApprove}
-          onSelectReject={onReject}
-        />
+        <motion.div variants={fadeUp}>
+          <PhotoQueue
+            photos={pendingQueue}
+            focusedId={focused?.id ?? null}
+            busyId={busyId}
+            onSelectApprove={onApprove}
+            onSelectReject={onReject}
+          />
+        </motion.div>
 
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+        <motion.div variants={fadeUp} className="mt-8 grid gap-4 lg:grid-cols-2">
           <TriviaControl eventId={event.id} />
           <PoseBattleControl
             eventId={event.id}
             approvedPhotos={approvedPhotos}
           />
-        </div>
+        </motion.div>
       </div>
-    </main>
+    </motion.main>
   );
 }

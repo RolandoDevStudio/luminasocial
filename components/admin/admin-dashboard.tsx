@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type ReactNode } from "react";
 import Link from "next/link";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   Archive,
   Check,
@@ -13,10 +14,12 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { fadeUp, staggerContainer } from "@/lib/motion";
 import {
   archiveEventAction,
   createEventAction,
   deleteEventAction,
+  ensureAlbumTokenAction,
   toggleEventActiveAction,
   updateEventAction,
 } from "@/app/(dashboard)/admin/actions";
@@ -34,6 +37,7 @@ export function AdminDashboard({
   events,
   deletedEvents,
 }: AdminDashboardProps) {
+  const reduce = useReducedMotion();
   const router = useRouter();
   const [message, setMessage] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -65,8 +69,16 @@ export function AdminDashboard({
   }
 
   return (
-    <main className="min-h-dvh bg-[#080706] text-[#f4ead7]">
-      <header className="border-b border-[#D4AF37]/20 bg-[#0B0C10]">
+    <motion.main
+      initial={reduce ? false : "hidden"}
+      animate="show"
+      variants={staggerContainer}
+      className="min-h-dvh bg-[#080706] text-[#f4ead7]"
+    >
+      <motion.header
+        variants={fadeUp}
+        className="border-b border-[#D4AF37]/20 bg-[#0B0C10]"
+      >
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-5">
           <div>
             <p className="text-[10px] uppercase tracking-[0.28em] text-[#D4AF37]">
@@ -86,13 +98,16 @@ export function AdminDashboard({
             Cerrar sesión
           </button>
         </div>
-      </header>
+      </motion.header>
 
       <div className="mx-auto max-w-6xl space-y-8 px-6 py-10">
         {message ? (
-          <p className="border border-[#D4AF37]/30 bg-[#12100e] px-4 py-3 text-sm text-[#D4AF37]">
+          <motion.p
+            variants={fadeUp}
+            className="border border-[#D4AF37]/30 bg-[#12100e] px-4 py-3 text-sm text-[#D4AF37]"
+          >
             {message}
-          </p>
+          </motion.p>
         ) : null}
 
         {lastAlbumPath ? (
@@ -116,7 +131,10 @@ export function AdminDashboard({
           </div>
         ) : null}
 
-        <section className="border border-[#D4AF37]/20 bg-[#12100e] p-5">
+        <motion.section
+          variants={fadeUp}
+          className="border border-[#D4AF37]/20 bg-[#12100e] p-5"
+        >
           <div className="flex items-center gap-2">
             <Plus className="h-4 w-4 text-[#D4AF37]" />
             <h2 className="font-display text-xl text-[#f8f0e3]">Nuevo evento</h2>
@@ -158,9 +176,9 @@ export function AdminDashboard({
               Crear
             </button>
           </form>
-        </section>
+        </motion.section>
 
-        <section>
+        <motion.section variants={fadeUp}>
           <h2 className="font-display text-2xl text-[#f8f0e3]">Eventos</h2>
           <p className="mt-1 text-sm text-[#f4ead7]/45">
             {events.length} registrados · archiva para generar álbum cliente
@@ -174,25 +192,26 @@ export function AdminDashboard({
               </p>
             ) : (
               events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  pending={pending}
-                  onMessage={setMessage}
-                  onRefresh={() => router.refresh()}
-                  onArchive={() => setArchiveTarget(event)}
-                  onDelete={() => setDeleteTarget(event)}
-                  onCopyAlbum={
-                    event.album_token
-                      ? () => void copyAlbum(`/magazine/${event.album_token}`)
-                      : undefined
-                  }
-                  startTransition={startTransition}
-                />
+                <motion.div key={event.id} variants={fadeUp}>
+                  <EventCard
+                    event={event}
+                    pending={pending}
+                    onMessage={setMessage}
+                    onRefresh={() => router.refresh()}
+                    onArchive={() => setArchiveTarget(event)}
+                    onDelete={() => setDeleteTarget(event)}
+                    onCopyAlbum={
+                      event.album_token
+                        ? () => void copyAlbum(`/magazine/${event.album_token}`)
+                        : undefined
+                    }
+                    startTransition={startTransition}
+                  />
+                </motion.div>
               ))
             )}
           </div>
-        </section>
+        </motion.section>
 
         {deletedEvents.length > 0 ? (
           <section>
@@ -264,11 +283,12 @@ export function AdminDashboard({
           event={archiveTarget}
           pending={pending}
           onClose={() => setArchiveTarget(null)}
-          onConfirm={(days) => {
+          onConfirm={(days, regenerateToken) => {
             startTransition(async () => {
               const fd = new FormData();
               fd.set("id", archiveTarget.id);
               fd.set("days", String(days));
+              if (regenerateToken) fd.set("regenerate_token", "true");
               const res = await archiveEventAction(fd);
               if (res.error) {
                 setMessage(res.error);
@@ -276,7 +296,9 @@ export function AdminDashboard({
               }
               setLastAlbumPath(res.albumUrlPath ?? null);
               setMessage(
-                `Evento ${archiveTarget.code} archivado. Comparte el álbum con el cliente.`,
+                regenerateToken
+                  ? `Álbum regenerado para ${archiveTarget.code}. Comparte la nueva URL.`
+                  : `Evento ${archiveTarget.code} archivado. La URL de revista se mantiene.`,
               );
               setArchiveTarget(null);
               router.refresh();
@@ -316,7 +338,7 @@ export function AdminDashboard({
           }}
         />
       ) : null}
-    </main>
+    </motion.main>
   );
 }
 
@@ -341,7 +363,7 @@ function EventCard({
 }) {
   const albumHref = event.album_token
     ? `/magazine/${event.album_token}`
-    : `/magazine/${event.id}`;
+    : null;
   const liveDisabled = Boolean(event.archived_at);
 
   return (
@@ -384,10 +406,12 @@ function EventCard({
               <QuickLink href={`/guest?code=${event.code}`} label="Invitado" />
             </>
           ) : null}
-          <QuickLink
-            href={albumHref}
-            label={event.album_token ? "Álbum cliente" : "Revista"}
-          />
+          {albumHref ? (
+            <QuickLink
+              href={albumHref}
+              label={event.archived_at ? "Álbum cliente" : "Revista"}
+            />
+          ) : null}
           {onCopyAlbum ? (
             <button
               type="button"
@@ -395,7 +419,7 @@ function EventCard({
               className="inline-flex items-center gap-1 border border-[#D4AF37]/25 px-2.5 py-1.5 text-[11px] uppercase tracking-wider text-[#D4AF37]/90"
             >
               <Copy className="h-3 w-3" />
-              Copiar álbum
+              Copiar revista
             </button>
           ) : null}
         </div>
@@ -470,8 +494,29 @@ function EventCard({
           className="inline-flex items-center gap-1.5 border border-[#D4AF37]/40 px-3 py-1.5 text-xs uppercase tracking-wider text-[#D4AF37] disabled:opacity-50"
         >
           <Archive className="h-3.5 w-3.5" />
-          {event.archived_at ? "Regenerar álbum" : "Archivar / Generar álbum"}
+          {event.archived_at ? "Actualizar caducidad" : "Archivar evento"}
         </button>
+
+        {!event.album_token ? (
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              startTransition(async () => {
+                const fd = new FormData();
+                fd.set("id", event.id);
+                const res = await ensureAlbumTokenAction(fd);
+                onMessage(
+                  res.error ?? `Token de revista listo para ${event.code}`,
+                );
+                onRefresh();
+              });
+            }}
+            className="text-xs uppercase tracking-wider text-[#f4ead7]/50 hover:text-[#D4AF37]"
+          >
+            Generar token revista
+          </button>
+        ) : null}
 
         <button
           type="button"
@@ -496,15 +541,17 @@ function ArchiveModal({
   event: Event;
   pending: boolean;
   onClose: () => void;
-  onConfirm: (days: number) => void;
+  onConfirm: (days: number, regenerateToken: boolean) => void;
 }) {
   const [days, setDays] = useState(30);
+  const [regenerateToken, setRegenerateToken] = useState(false);
 
   return (
     <ModalShell onClose={onClose} title="Archivar evento">
       <p className="text-sm text-[#f4ead7]/60">
-        Se desactiva la operación en vivo y se genera una URL única del álbum
-        para <strong className="text-[#f4ead7]">{event.name}</strong>.
+        Se desactiva la operación en vivo y se fija la caducidad del álbum para{" "}
+        <strong className="text-[#f4ead7]">{event.name}</strong>. La URL de
+        revista/{event.album_token ? "álbum se mantiene" : "se creará un token"}.
       </p>
       <label className="mt-4 block">
         <span className="text-xs uppercase tracking-wider text-[#f4ead7]/45">
@@ -519,11 +566,27 @@ function ArchiveModal({
           className="mt-1.5 w-full border border-[#D4AF37]/25 bg-[#0c0b0a] px-3 py-2 text-sm outline-none focus:border-[#D4AF37]"
         />
       </label>
+      {event.album_token ? (
+        <label className="mt-3 flex items-start gap-2 text-sm text-[#f4ead7]/70">
+          <input
+            type="checkbox"
+            checked={regenerateToken}
+            onChange={(e) => setRegenerateToken(e.target.checked)}
+            className="mt-1"
+          />
+          <span>
+            Regenerar enlace (invalida la URL anterior)
+            <span className="mt-0.5 block text-xs text-[#f4ead7]/40">
+              Por defecto se conserva el mismo token de la revista en vivo.
+            </span>
+          </span>
+        </label>
+      ) : null}
       <div className="mt-5 flex flex-wrap gap-2">
         <button
           type="button"
           disabled={pending || !days || days < 1}
-          onClick={() => onConfirm(days)}
+          onClick={() => onConfirm(days, regenerateToken)}
           className="bg-[#D4AF37] px-4 py-2.5 text-sm font-semibold text-[#1a140c] disabled:opacity-50"
         >
           Confirmar archivo
@@ -655,9 +718,13 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-4 sm:items-center">
-      <div
+      <motion.div
         role="dialog"
         aria-modal="true"
+        initial={{ opacity: 0, y: 16, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        exit={{ opacity: 0, y: 8, scale: 0.98 }}
+        transition={{ duration: 0.25 }}
         className="w-full max-w-md border border-[#D4AF37]/30 bg-[#12100e] p-5"
       >
         <div className="flex items-start justify-between gap-3">
@@ -679,7 +746,7 @@ function ModalShell({
           </button>
         </div>
         <div className="mt-4">{children}</div>
-      </div>
+      </motion.div>
     </div>
   );
 }

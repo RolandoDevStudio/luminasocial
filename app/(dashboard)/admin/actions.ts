@@ -5,6 +5,7 @@ import { requireAdminSession } from "@/lib/admin/auth";
 import {
   archiveEvent,
   createEvent,
+  ensureAlbumToken,
   purgeEvent,
   softDeleteEvent,
   updateEvent,
@@ -78,16 +79,42 @@ export async function archiveEventAction(formData: FormData) {
 
   const id = String(formData.get("id") ?? "");
   const days = Number(formData.get("days") ?? 30);
+  const regenerateToken = formData.get("regenerate_token") === "true";
 
   if (!id) return { error: "ID inválido" };
 
   try {
-    const { event, albumUrlPath } = await archiveEvent(id, days);
+    const { event, albumUrlPath } = await archiveEvent(id, days, {
+      regenerateToken,
+    });
     revalidatePath("/admin");
     return { ok: true as const, event, albumUrlPath };
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : "Error al archivar",
+    };
+  }
+}
+
+export async function ensureAlbumTokenAction(formData: FormData) {
+  await requireAdminSession();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) return { error: "ID inválido" };
+
+  try {
+    const event = await ensureAlbumToken(id);
+    revalidatePath("/admin");
+    return {
+      ok: true as const,
+      event,
+      albumUrlPath: event.album_token
+        ? `/magazine/${event.album_token}`
+        : null,
+    };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Error al generar token",
     };
   }
 }

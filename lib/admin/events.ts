@@ -51,6 +51,7 @@ export async function createEvent(input: {
       name: input.name.trim(),
       code,
       is_active: input.is_active ?? true,
+      album_token: generateAlbumToken(),
     })
     .select("*")
     .single();
@@ -102,15 +103,30 @@ export async function updateEvent(
 export async function archiveEvent(
   id: string,
   days: number,
+  options: { regenerateToken?: boolean } = {},
 ): Promise<{ event: Event; albumUrlPath: string }> {
   if (!Number.isFinite(days) || days < 1 || days > 3650) {
     throw new Error("Los días de vigencia deben estar entre 1 y 3650");
   }
 
   const supabase = await createServerClient();
+
+  const { data: existing, error: fetchError } = await supabase
+    .from("events")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !existing) {
+    throw new Error(fetchError?.message ?? "Evento no encontrado");
+  }
+
   const now = new Date();
   const expires = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
-  const token = generateAlbumToken();
+  const token =
+    options.regenerateToken || !existing.album_token
+      ? generateAlbumToken()
+      : existing.album_token;
 
   const { data, error } = await supabase
     .from("events")
@@ -129,6 +145,34 @@ export async function archiveEvent(
   }
 
   return { event: data, albumUrlPath: `/magazine/${token}` };
+}
+
+/** Ensures an existing event has a stable album_token (legacy rows). */
+export async function ensureAlbumToken(id: string): Promise<Event> {
+  const supabase = await createServerClient();
+  const { data: existing, error: fetchError } = await supabase
+    .from("events")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (fetchError || !existing) {
+    throw new Error(fetchError?.message ?? "Evento no encontrado");
+  }
+
+  if (existing.album_token) return existing;
+
+  const { data, error } = await supabase
+    .from("events")
+    .update({ album_token: generateAlbumToken() })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to ensure album token: ${error.message}`);
+  }
+  return data;
 }
 
 export async function softDeleteEvent(
@@ -166,6 +210,14 @@ export async function softDeleteEvent(
     patch.album_expires_at = new Date(
       now.getTime() + days * 24 * 60 * 60 * 1000,
     ).toISOString();
+  } else if (!existing.album_expires_at) {
+    const days = Number.isFinite(albumDays) && albumDays >= 1 ? albumDays : 30;
+    patch.archived_at = existing.archived_at ?? now.toISOString();
+    patch.album_expires_at = new Date(
+      now.getTime() + days * 24 * 60 * 60 * 1000,
+    ).toISOString();
+  } else if (!existing.archived_at) {
+    patch.archived_at = now.toISOString();
   }
 
   const { data, error } = await supabase

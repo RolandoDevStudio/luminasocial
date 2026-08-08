@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useEventContext } from "@/hooks/useEventContext";
 import { useGuestTable } from "@/hooks/useGuestTable";
 import { useLiveScreenSync } from "@/hooks/useLiveScreenSync";
@@ -11,6 +12,7 @@ import { PoseBattleCard } from "@/components/guest/pose-battle-card";
 import { TriviaCard } from "@/components/guest/trivia-card";
 import type { PoseBattlePayload, TriviaPayload } from "@/types/database";
 import { cn } from "@/lib/utils";
+import { fadeUp, staggerContainer, tapSoft } from "@/lib/motion";
 
 const TABLES = Array.from({ length: 30 }, (_, i) => i + 1);
 
@@ -33,6 +35,7 @@ function isPosePayload(payload: unknown): payload is PoseBattlePayload {
 }
 
 export function GuestApp() {
+  const reduce = useReducedMotion();
   const { event, loading: eventLoading, error: eventError } = useEventContext();
   const live = useLiveScreenSync(event?.id ?? null);
   const { tableNumber, setTableNumber, ready } = useGuestTable();
@@ -64,7 +67,12 @@ export function GuestApp() {
       : null;
 
   return (
-    <main className="relative min-h-dvh bg-[#080706] px-5 pb-16 pt-16 text-[#f4ead7]">
+    <motion.main
+      initial={reduce ? false : "hidden"}
+      animate="show"
+      variants={staggerContainer}
+      className="relative min-h-dvh bg-[#080706] px-5 pb-16 pt-16 text-[#f4ead7]"
+    >
       <LiveSyncDrawer
         view={live.view}
         payload={live.payload}
@@ -72,16 +80,28 @@ export function GuestApp() {
         connected={live.connected}
       />
 
-      <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-[#D4AF37]">
+      <motion.p
+        variants={fadeUp}
+        className="text-[10px] font-medium uppercase tracking-[0.28em] text-[#D4AF37]"
+      >
         Invitado
-      </p>
-      <h1 className="font-display mt-2 text-4xl text-[#f8f0e3]">{event.name}</h1>
-      <p className="mt-2 max-w-sm text-sm text-[#f4ead7]/55">
+      </motion.p>
+      <motion.h1
+        variants={fadeUp}
+        className="font-display mt-2 text-4xl text-[#f8f0e3]"
+      >
+        {event.name}
+      </motion.h1>
+      <motion.p
+        variants={fadeUp}
+        className="mt-2 max-w-sm text-sm text-[#f4ead7]/55"
+      >
         Elige tu mesa para votar en trivia y duelos. Mira la pantalla con{" "}
         <span className="text-[#D4AF37]">En vivo</span>.
-      </p>
+      </motion.p>
 
-      <section
+      <motion.section
+        variants={fadeUp}
         className={cn(
           "mt-6 border p-4",
           highlightTable
@@ -94,9 +114,10 @@ export function GuestApp() {
         </p>
         <div className="mt-3 grid grid-cols-6 gap-1.5">
           {TABLES.map((n) => (
-            <button
+            <motion.button
               key={n}
               type="button"
+              whileTap={reduce ? undefined : tapSoft}
               onClick={() => {
                 setTableNumber(n);
                 setHighlightTable(false);
@@ -109,10 +130,10 @@ export function GuestApp() {
               )}
             >
               {n}
-            </button>
+            </motion.button>
           ))}
         </div>
-      </section>
+      </motion.section>
 
       {trivia ? (
         <TriviaCard
@@ -124,30 +145,36 @@ export function GuestApp() {
 
       {pose ? <PoseBattleCard payload={pose} /> : null}
 
-      <div className="mt-10 space-y-3">
+      <motion.div variants={fadeUp} className="mt-10 space-y-3">
         <Link
           href="/paparazzi"
           className="flex min-h-14 items-center justify-center border border-[#D4AF37] bg-[#D4AF37] text-sm font-semibold uppercase tracking-wider text-[#1a140c]"
         >
           Abrir Paparazzi
         </Link>
-        <Link
-          href={`/magazine/${event.id}`}
-          className="flex min-h-12 items-center justify-center border border-[#D4AF37]/35 text-sm font-medium text-[#D4AF37]"
-        >
-          Revista digital
-        </Link>
+        {event.album_token ? (
+          <Link
+            href={`/magazine/${event.album_token}`}
+            className="flex min-h-12 items-center justify-center border border-[#D4AF37]/35 text-sm font-medium text-[#D4AF37]"
+          >
+            Revista digital
+          </Link>
+        ) : (
+          <p className="text-center text-xs text-[#f4ead7]/40">
+            Revista no disponible (falta token del evento)
+          </p>
+        )}
         <Link
           href="/screen"
           className="flex min-h-12 items-center justify-center border border-[#D4AF37]/25 text-sm font-medium text-[#f4ead7]/60"
         >
           Ver pantalla completa
         </Link>
-      </div>
+      </motion.div>
 
       {live.error ? (
         <p className="mt-6 text-sm text-red-300">{live.error}</p>
       ) : null}
-    </main>
+    </motion.main>
   );
 }

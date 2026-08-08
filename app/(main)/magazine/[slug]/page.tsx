@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { MagazineApp } from "@/components/magazine/magazine-app";
 import { resolveMagazineSlug } from "@/lib/magazine/resolve";
 
@@ -14,6 +14,10 @@ export default async function MagazinePage({ params }: MagazinePageProps) {
     notFound();
   }
 
+  if (result.status === "redirect") {
+    redirect(`/magazine/${result.token}`);
+  }
+
   if (result.status === "expired") {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center bg-[#080706] px-6 text-center text-[#f4ead7]">
@@ -24,8 +28,9 @@ export default async function MagazinePage({ params }: MagazinePageProps) {
           Álbum expirado
         </h1>
         <p className="mt-3 max-w-md text-sm text-[#f4ead7]/55">
-          El enlace de <strong className="text-[#f4ead7]">{result.event.name}</strong>{" "}
-          ya no está disponible. Contacta al organizador si necesitas una copia.
+          El enlace de{" "}
+          <strong className="text-[#f4ead7]">{result.event.name}</strong> ya no
+          está disponible. Contacta al organizador si necesitas una copia.
         </p>
       </main>
     );

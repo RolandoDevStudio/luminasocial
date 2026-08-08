@@ -14,3 +14,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_events_album_token
   WHERE album_token IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_events_deleted_at ON events (deleted_at);
+
+-- Backfill stable magazine tokens for existing events (vivo + archivado)
+UPDATE events
+SET album_token = replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', '')
+WHERE album_token IS NULL;

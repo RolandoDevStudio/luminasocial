@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { fadeIn } from "@/lib/motion";
 
 type AlbumExpiryBannerProps = {
   expiresAt: string;
@@ -23,6 +25,7 @@ function formatRemaining(ms: number): string {
 }
 
 export function AlbumExpiryBanner({ expiresAt }: AlbumExpiryBannerProps) {
+  const reduce = useReducedMotion();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -47,7 +50,10 @@ export function AlbumExpiryBanner({ expiresAt }: AlbumExpiryBannerProps) {
   }
 
   return (
-    <div
+    <motion.div
+      initial={reduce ? false : "hidden"}
+      animate="show"
+      variants={fadeIn}
       className={
         urgent
           ? "no-print border-b border-amber-400/40 bg-amber-950/35 px-6 py-3 text-sm text-amber-100"
@@ -67,6 +73,6 @@ export function AlbumExpiryBanner({ expiresAt }: AlbumExpiryBannerProps) {
       <p className="mt-1 text-xs text-[#f4ead7]/45">
         Descarga tus fotos e información antes de que expire el enlace.
       </p>
-    </div>
+    </motion.div>
   );
 }

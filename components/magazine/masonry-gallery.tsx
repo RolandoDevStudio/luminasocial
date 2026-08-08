@@ -1,12 +1,16 @@
 "use client";
 
+import { motion, useReducedMotion } from "framer-motion";
 import type { Photo } from "@/types/database";
+import { fadeUp, staggerContainer } from "@/lib/motion";
 
 type MasonryGalleryProps = {
   photos: Photo[];
 };
 
 export function MasonryGallery({ photos }: MasonryGalleryProps) {
+  const reduce = useReducedMotion();
+
   if (photos.length === 0) {
     return (
       <p className="px-6 py-12 text-sm text-[#f4ead7]/45">
@@ -17,16 +21,29 @@ export function MasonryGallery({ photos }: MasonryGalleryProps) {
 
   return (
     <section className="px-6 py-12">
-      <h2 className="font-display text-3xl text-[#f8f0e3] print:text-black">
+      <motion.h2
+        initial={reduce ? false : "hidden"}
+        whileInView="show"
+        viewport={{ once: true, margin: "-40px" }}
+        variants={fadeUp}
+        className="font-display text-3xl text-[#f8f0e3] print:text-black"
+      >
         Galería
-      </h2>
+      </motion.h2>
       <p className="mt-2 text-sm text-[#f4ead7]/45 print:text-neutral-600">
         Momentos aprobados, etiquetados por mesa
       </p>
-      <div className="mt-8 columns-1 gap-4 sm:columns-2 lg:columns-3">
+      <motion.div
+        initial={reduce ? false : "hidden"}
+        whileInView="show"
+        viewport={{ once: true, margin: "-40px" }}
+        variants={staggerContainer}
+        className="mt-8 columns-1 gap-4 sm:columns-2 lg:columns-3"
+      >
         {photos.map((photo) => (
-          <figure
+          <motion.figure
             key={photo.id}
+            variants={fadeUp}
             className="mb-4 break-inside-avoid border border-[#D4AF37]/15 bg-[#12100e] print:border-neutral-300"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -38,9 +55,9 @@ export function MasonryGallery({ photos }: MasonryGalleryProps) {
             <figcaption className="px-3 py-2 text-xs uppercase tracking-wider text-[#D4AF37] print:text-neutral-700">
               Mesa {photo.table_number}
             </figcaption>
-          </figure>
+          </motion.figure>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import {
   getApprovedPhotos,
   getClosestPoseBattle,
@@ -15,6 +16,7 @@ import { MasonryGallery } from "@/components/magazine/masonry-gallery";
 import { ShareBar } from "@/components/magazine/share-bar";
 import { StatsSection } from "@/components/magazine/stats-section";
 import { AlbumExpiryBanner } from "@/components/magazine/album-expiry-banner";
+import { fadeIn } from "@/lib/motion";
 
 type MagazineAppProps = {
   event: Event;
@@ -22,6 +24,7 @@ type MagazineAppProps = {
 };
 
 export function MagazineApp({ event, isAlbum }: MagazineAppProps) {
+  const reduce = useReducedMotion();
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [photogenic, setPhotogenic] = useState<TableScore | null>(null);
   const [triviaLeaders, setTriviaLeaders] = useState<TableScore[]>([]);
@@ -79,7 +82,12 @@ export function MagazineApp({ event, isAlbum }: MagazineAppProps) {
   }
 
   return (
-    <main className="magazine-root min-h-dvh bg-[#080706] text-[#f4ead7] print:bg-white print:text-black">
+    <motion.main
+      initial={reduce ? false : "hidden"}
+      animate="show"
+      variants={fadeIn}
+      className="magazine-root min-h-dvh bg-[#080706] text-[#f4ead7] print:bg-white print:text-black"
+    >
       {isAlbum && event.album_expires_at ? (
         <AlbumExpiryBanner expiresAt={event.album_expires_at} />
       ) : null}
@@ -107,6 +115,6 @@ export function MagazineApp({ event, isAlbum }: MagazineAppProps) {
       <footer className="px-6 py-10 text-center text-xs uppercase tracking-[0.25em] text-[#f4ead7]/35 print:text-neutral-500">
         Lumina Social
       </footer>
-    </main>
+    </motion.main>
   );
 }

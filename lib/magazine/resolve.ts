@@ -6,13 +6,27 @@ const UUID_RE =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export type MagazineResolveResult =
-  | { status: "ok"; event: Event; isAlbum: boolean; expired: false }
+  | {
+      status: "ok";
+      event: Event;
+      /** Client deliverable mode: countdown + download */
+      isAlbum: boolean;
+      expired: false;
+    }
   | { status: "expired"; event: Event }
+  | { status: "redirect"; token: string }
   | { status: "not_found" };
 
 function isExpired(event: Event): boolean {
   if (!event.album_expires_at) return false;
   return new Date(event.album_expires_at).getTime() < Date.now();
+}
+
+/** Deliverable album UX (banner + ZIP) after archive / soft-delete / expiry set. */
+export function isClientAlbumMode(event: Event): boolean {
+  return Boolean(
+    event.archived_at || event.deleted_at || event.album_expires_at,
+  );
 }
 
 export async function resolveMagazineSlug(
@@ -36,9 +50,15 @@ export async function resolveMagazineSlug(
     if (isExpired(byToken)) {
       return { status: "expired", event: byToken };
     }
-    return { status: "ok", event: byToken, isAlbum: true, expired: false };
+    return {
+      status: "ok",
+      event: byToken,
+      isAlbum: isClientAlbumMode(byToken),
+      expired: false,
+    };
   }
 
+  // Legacy UUID bookmarks → redirect to stable token URL when possible
   if (!UUID_RE.test(trimmed)) {
     return { status: "not_found" };
   }
@@ -55,12 +75,25 @@ export async function resolveMagazineSlug(
 
   if (!byId) return { status: "not_found" };
 
-  // Preview by UUID only while the event is still live (not archived / soft-deleted)
+  if (isExpired(byId)) {
+    return { status: "expired", event: byId };
+  }
+
+  if (byId.album_token) {
+    return { status: "redirect", token: byId.album_token };
+  }
+
+  // Rare: legacy row without token — allow live preview by UUID
   if (byId.archived_at || byId.deleted_at) {
     return { status: "not_found" };
   }
 
-  return { status: "ok", event: byId, isAlbum: false, expired: false };
+  return {
+    status: "ok",
+    event: byId,
+    isAlbum: false,
+    expired: false,
+  };
 }
 
 /** Client helper: load event by album token. */

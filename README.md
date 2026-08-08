@@ -63,7 +63,7 @@ Opcional en `.env.local`: `NEXT_PUBLIC_DEMO_EVENT_ID=00000000-0000-0000-0000-000
 | `/moderator` | Moderación + Trivia + Pose Battle |
 | `/guest` | Invitado + EN VIVO + votaciones |
 | `/screen` | Pantalla gigante (TV) |
-| `/magazine/[slug]` | Revista / álbum (UUID en vivo o token archivado) |
+| `/magazine/[slug]` | Revista / álbum estable por token (vivo y archivado) |
 | `/login` | Auth placeholder genérico |
 | `/api/health` | Health check |
 
